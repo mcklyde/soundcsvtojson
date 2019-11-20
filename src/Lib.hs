@@ -13,7 +13,7 @@ data SoundFile = SoundFile {
   name :: T.Text,
   title :: T.Text,
   tempo :: T.Text,
-  notes :: [T.Text],
+  notes :: [Note],
   lyrics :: [T.Text],
   video :: T.Text,
   score :: T.Text,
@@ -21,19 +21,41 @@ data SoundFile = SoundFile {
   timeSignature :: T.Text
 } deriving (Generic, Show)
 
+data Note = Note {
+  notename :: T.Text,
+  octave :: Int,
+  timing :: T.Text
+} deriving (Generic, Show)
+
+instance ToJSON Note where
+  toEncoding = genericToEncoding defaultOptions
+
 instance ToJSON SoundFile where
     toEncoding = genericToEncoding defaultOptions
 
 emptyProfile :: SoundFile
-emptyProfile = SoundFile {name = "", title = "", tempo = "", notes = [""], lyrics = [""], video = "", score = "", key = "", timeSignature = ""}
+emptyProfile = SoundFile {name = "", title = "", tempo = "", notes = [Note {notename = "", octave = 0, timing = ""}], lyrics = [""], video = "", score = "", key = "", timeSignature = ""}
 
 type CSVKeyValue = (T.Text, [T.Text])
+
+notesToJSON :: T.Text -> Note
+notesToJSON note = Note {notename = nameofnote, octave = noteoctave, timing = notetiming}
+  where
+    split  = T.breakOn "/" note
+    notetiming = snd $ split
+    nameofnote = T.filter (/= '`') (fst split)
+    noteoctave
+            | (length group) == 1 = 4
+            | (group !! 0) == nameofnote = 4+(T.length (group !! 1))
+            | otherwise = (4-(T.length (group !! 0)))
+      where
+        group = T.group (fst split)
 
 convertToProfile :: SoundFile -> CSVKeyValue -> SoundFile
 convertToProfile soundfile ("name", val) = soundfile {name = (val !! 0)}
 convertToProfile soundfile ("title", val) = soundfile {title = (val !! 0)}
 convertToProfile soundfile ("tempo", val) = soundfile {tempo = (val !! 0)}
-convertToProfile soundfile ("notes", val) = soundfile {notes = (val)}
+convertToProfile soundfile ("notes", val) = soundfile {notes = (map (notesToJSON) val)}
 convertToProfile soundfile ("lyrics", val) = soundfile {lyrics = (val)}
 convertToProfile soundfile ("video", val) = soundfile {video = (val !! 0)}
 convertToProfile soundfile ("score", val) = soundfile {score = (val !! 0)}
