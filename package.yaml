@@ -26,6 +26,8 @@ dependencies:
 - regex-tdfa
 - bytestring
 - directory
+- cmdargs
+- process
 
 library:
   source-dirs: src
