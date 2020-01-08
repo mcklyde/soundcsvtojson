@@ -51,7 +51,9 @@ splitter n | T.any (== '\r') n = T.splitOn "\r" n
 createFile :: FilePath -> File
 createFile f = File {filename = fname, genre = fgenre, filepath = fpath}
   where
-    fgenre =  head $ tail $ reverse $ directories
+    fgenre =  case length directories >= 3 of
+               True -> head $ tail $ tail $ reverse $ directories
+               _ -> "Unknown"
     fname = T.replace ".json" "" $ head $ reverse $ directories
     directories = T.splitOn "/" fpath
     fpath = (T.replace ".csv" ".json" (T.pack f))
